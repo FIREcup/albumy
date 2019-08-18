@@ -28,3 +28,29 @@ def register():
         flash('Cofirm eamil send, check your inbox.', 'info')
         return redirect(url_for('.login')
     return render_template('auth/register.html', form=form)
+
+
+@auth_bp.route('/confirm/<token>')
+@login_required
+def confirm(token):
+    if current_user.confirmed:
+        return redirect(url_for('main.index'))
+
+    if validate_token(user=current_user, token=token, operation=Operation.CONFIRM):
+        flash('Account confirmed.', 'success')
+        return redirect(url_for('main.index'))
+    else:
+        flash('Invalid or expired token.', 'danger')
+        return redirect(url_for('.resend_confirm_email'))
+
+
+@auth_bp.route('/resend_confirm_email')
+@login_required
+def resend_confirm_email():
+    if current_user.confirmed:
+        return redirect(url_for('main.index'))
+
+    token = generate_token(user=current_user, operation=Operations.CONFIRM)
+    send_confirm_email(user=current_user, token=token)
+    flash('New email send, check your inbox.', 'info')
+    return redirect(url_for('main.indxe'))
