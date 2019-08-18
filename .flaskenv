@@ -1,0 +1,2 @@
+FLASK_APP='albumy'
+DEBUG_MODE=1
