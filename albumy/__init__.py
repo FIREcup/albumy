@@ -37,6 +37,32 @@ def register_template_context(app):
     pass
 
 
+def register_errorhandler(app):
+    @app.errorhandler(400)
+    def bad_request(e):
+        return render_template('errors/400.html'), 400
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template('errors/403.html'), 403
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(413)
+    def request_entity_too_large(e):
+        return render_template('errors/413.html'), 413
+
+    @app.errorhandler(500)
+    def internal_erver_error(e):
+        return render_template('errors/500.html'), 500
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        return render_template('errors/400.html', description=e.description), 500
+
+
 def register_commands(app):
     @app.cli.command()
     def init():

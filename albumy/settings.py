@@ -34,6 +34,11 @@ class BaseConfig:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = ('Albumy Admin', MAIL_USERNAME)
 
+    DROPZONE_ALLOWED_FILE_TYPE = 'image'
+    DROPZONE_MAX_FILE_SIZE = 3
+    DROPZONE_MAX_FILES = 30
+    DROPZONE_ENABLE_CSRF = True
+
 
 class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = prefix + os.path.join(baseidr, 'data-dev.db')
