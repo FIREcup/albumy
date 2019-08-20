@@ -18,3 +18,17 @@ def confirm_required(func):
             return redirect(url_for('main.index'))
         return func(*args, **kwargs)
     return decorated_function
+
+def permission_required(permission_name):
+    def decorator(func):
+        @wraps(func)
+        def wrapped_function(*args, **kwargs):
+            if not current_user.can(permission_name):
+                abort(403)
+            return func(*args, **kwargs)
+        return wrapped_function
+    return decorator
+
+
+def admin_required(func):
+    return permission_required('ADMINISTER')(func)

@@ -29,10 +29,12 @@ login_manager.login_message_category = 'warning'
 login_manager.refresh_view = 'auth.re_authenticate'
 login_manager.needs_refresh_message_category = 'warning'
 
-class Guest(AnonymousUserMixin):
+class Guest(AnonymousUserMixin): # 用户未登录时，current_user返回anonymous_user对象
     def can(self, permission_name):
         return False
 
     @property
     def is_admin(self):
         return False
+
+login_manager.anonymous_user = Guest

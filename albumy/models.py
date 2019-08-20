@@ -27,11 +27,32 @@ class User(db.Model, UserMixin):
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', back_populates='users')
 
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        self.set_role()
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def validate_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def set_role(self):
+        if self.role is None:
+            if self.email == current_app.config['ALBUMY_ADMIN_EMAIL']:
+                self.role = Role.query.filter_by(name='Administrator').first()
+            else:
+                self.role = Role.query.filter_by(name='User').first()
+            db.session.commit()
+
+    @property
+    def is_admin(self):
+        return self.role.name == 'Administrator'
+
+    def can(self, permission_name):
+        permission = Permission.query.filter_by(name=permission_name).first()
+        return permission is not None and self.role is not None and  \
+               permission in self.role.permissions
     
 
 class Permission(db.Model):

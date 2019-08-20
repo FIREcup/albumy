@@ -5,7 +5,7 @@ from flask_login import current_user
 from flask_wtf.csrf import CSRFError
 
 from extensions import bootstrap, db, login_manager, mail, dropzone, moment, whooshee, avatars, csrf
-from .models import User
+from .models import User, Role
 from .settings import config
 
 def create_app(config_name=None):
@@ -35,3 +35,16 @@ def register_shell_context(app):
 
 def register_template_context(app):
     pass
+
+
+def register_commands(app):
+    @app.cli.command()
+    def init():
+        """Initialize Albumy"""
+        click.echo('Initializing the database...')
+        db.create_all()
+
+        click.echo('Initializing the roles and permissions...')
+        Role.init_role()
+
+        click.echo('Done.'
