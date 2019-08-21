@@ -23,9 +23,11 @@ class User(db.Model, UserMixin):
     location = db.Column(db.String(50))
     member_since = db.Column(db.DateTime, default=datetime.utcnow)
     confirmed = db.Column(db.Boolean, default=False)
-    
+
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', back_populates='users')
+
+    photos = db.relationship('Photo', back_populates='author', cascade='all, delete-orphan')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -53,7 +55,7 @@ class User(db.Model, UserMixin):
         permission = Permission.query.filter_by(name=permission_name).first()
         return permission is not None and self.role is not None and  \
                permission in self.role.permissions
-    
+
 
 class Permission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -89,3 +91,16 @@ class Role(db.Model):
                     db.session.add(permission)
                 role.permissions.append(permission)
         db.session.commit()
+
+
+class Photo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(500))
+    filename = db.Column(db.String(64))
+    filename_s = db.Column(db.String(64))
+    filename_m = db.Column(db.String(64))
+    timestamp = db.Column(db.DataTime, default=datetime.utcnow, index=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    author = db.relationship('User', back_populates='photos')
+

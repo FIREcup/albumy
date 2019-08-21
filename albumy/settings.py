@@ -21,6 +21,7 @@ class BaseConfig:
     ALBUMY_MANAGE_COMMENT_PER_PAGE = 30
     ALBUMY_SEARCH_RESULT_PER_PAGE = 20
     ALBUMY_MAIL_SUBJECT_PREFIX = '[Albumy]'
+    ALBUMY_UPLOAD_PATH = os.path.join(basedir, 'uploads')
 
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret_string')
     MAX_CONTENT_LENGTH = 3 * 1024 * 1024

@@ -15,13 +15,15 @@ def create_app(config_name=None):
     app = Flask('albumy')
     app.config.from_object(config[config_name])
 
-    
+
 def register_extensions(app):
     bootstrap.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
     moment.init_app(app)
+    csrf.init_app(app)
+    dropzone.init_app(app)
 
 def register_blueprints(app):
     app.register_blueprint(main_bp)
