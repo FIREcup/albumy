@@ -12,6 +12,11 @@ class Operations:
 class BaseConfig:
     ALBUMY_ADMIN_EMAIL = os.getenv('ALBUMY_ADMIN', 'admin@helloflask.com')
     ALBUMY_PHOTO_PER_PAGE = 12
+    ALBUMY_PHOTO_SIZE = {'small': 400, 'medium': 800}
+    ALBUMY_PHOTO_SUFFIX = {
+            ALBUMY_PHOTO_SIZE['small']: '_s',
+            ALBUMY_PHOTO_SIZE['medium']: '_m'
+            }
     ALBUMY_COMMETN_PER_PAGE = 15
     ALBUMY_NOTIFICATION_PER_PAGE = 20
     ALBUMY_USER_PER_PAGE = 20
