@@ -24,6 +24,7 @@ def register_extensions(app):
     moment.init_app(app)
     csrf.init_app(app)
     dropzone.init_app(app)
+    avatars.init_app(app)
 
 def register_blueprints(app):
     app.register_blueprint(main_bp)
