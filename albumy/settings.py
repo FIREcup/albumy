@@ -27,6 +27,8 @@ class BaseConfig:
     ALBUMY_SEARCH_RESULT_PER_PAGE = 20
     ALBUMY_MAIL_SUBJECT_PREFIX = '[Albumy]'
     ALBUMY_UPLOAD_PATH = os.path.join(basedir, 'uploads')
+    AVATARS_SAVE_PATH = os.path.join(ALBUMY_UPLOAD_PATH, 'avatars')
+    AVATARS_SAVE_TUPLE = (30, 100, 200)
 
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret_string')
     MAX_CONTENT_LENGTH = 3 * 1024 * 1024
