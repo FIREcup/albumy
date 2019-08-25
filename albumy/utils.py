@@ -89,3 +89,4 @@ def resize_image(image, filename, base_width):
     filename += current_app.config['ALBUMY_PHOTO_SUFFIX'][base_width] + ext
     img.save(os.path.join(current_app.config['ALBUMY_UPLOAD_PATH'], filename), optimize=True, quality=85)
     return filename
+

@@ -106,6 +106,11 @@ class Role(db.Model):
         db.session.commit()
 
 
+tagging = db.Table('tagging', 
+                   db.Column('photo_id', db.Integer, db.ForeignKey('photo.id')), 
+                   db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')))
+
+
 class Photo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(500))
@@ -114,6 +119,24 @@ class Photo(db.Model):
     filename_m = db.Column(db.String(64))
     timestamp = db.Column(db.DataTime, default=datetime.utcnow, index=True)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    flag = db.Column(db.Integer, default=0)
 
     author = db.relationship('User', back_populates='photos')
+    tags = db.relationship('Tag', secondary=tagging, back_populates='photos')
+
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), uniq=True, index=True)
+
+    photos = db.relationship('Photo', back_populates='tags', secondary=tagging)
+
+
+@db.event.listens_for(Photo, 'after_delete', named=True)
+def delete_photos(**kwargs):
+    target = kwargs['target']
+    for filename in [target.filename, target.filename_s, target.filename_m]:
+        path = os.path.join(current_app.config['ALBUMY_UPLOAD_PATH'], filename)
+        if os.path.exists(path):
+            os.remove(path)
 
