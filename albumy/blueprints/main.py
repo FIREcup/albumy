@@ -41,7 +41,7 @@ def upload():
 def get_avatar(filename):
     return send_from_directory(current_app.config['AVATARS_SAVE_PATH'], filename)
 
-# 获取图片 
+# 获取图片
 @main_bp.route('/uploads/<path:filename>')
 def get_image(filename):
     return send_from_directory(current_app.config['ALBUMY_UPLOAD_PATH'], filename)
@@ -51,7 +51,7 @@ def get_image(filename):
 def photo_next(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     photo_n = Photo.query.with_parent(photo.author).filter(Photo.id < Photo_id).order_by(Photo.id.desc()).first()
-    
+
     if photo_n is None:
         flash('This is already the last one.', 'info')
         return redirect(url_for('.show_photo', photo_id=photo_id))
@@ -75,7 +75,7 @@ def delete_photo(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     if current_user != photo.author:
         abort(403)
-    
+
     db.session.delete(photo)
     db.session.commit()
     flash('Photo deleted.', 'info')
@@ -84,7 +84,7 @@ def delete_photo(photo_id):
     if photo_n is None:
         photo_p = Photo.query.with_parent(photo.author).filter(Photo.id > photo_id).order_by(Photo.id.asc()).first()
         if photo_p is None:
-            return redirect(url_for('user.index', username=photo.author.username)) 
+            return redirect(url_for('user.index', username=photo.author.username))
         return redirect(url_for('.show_photo', photo_id=photo_p.id))
     return redirect(url_for('.show_photo', photo_id=photo_n.id))
 
@@ -178,10 +178,47 @@ def delete_tag(photo_id, tag_id):
 
     photo.tags.remove(tag)
     db.session.commit()
- 
+
     if not tag.photos:
         db.session.delete(tag)
         db.session.commit()
 
     falsh('Tag deleted.', 'info')
     return redirect(url_for('.show_photo', photo_id=photo_id))
+
+@main_bp.route('/collect/<int:photo_id>', methods=['POST'])
+@login_required
+@confirm_required
+@permission_required('COLLECT')
+def collect(photo_id):
+    photo = Photo.query.get_or_404(photo_id)
+    if current_user.is_collecting(photo)
+        flash('Already collected.', 'info')
+        return redirect(url_for('.show_photo', photo_id=photo.id))
+
+    current_user.collect(photo)
+    flash('Photo collected.', 'success')
+    return redirect(url_for('.show_photo', photo_id=photo_id))
+
+@main_bp.route('/uncollect/<int:photo_id>', methods=['POST'])
+@login_required
+def uncollect(photo_id):
+    photo = Photo.query.get_or_404(photo_id)
+    if not current_user.is_collecting(photo):
+        flash('Not collect yet.', 'info')
+        return redirect(url_for('main.show_photo', photo_id=photo_id))
+
+    current_user.uncollect(photo)
+    flash('Photo uncollected.', 'success')
+    return redirect(url_for('.show_photo', photo_id=photo_id))
+
+@mian_bp.route('/photo/<int:photo_id>/collectors')
+def show_collectors(photo_id):
+    photo = Photo.query.get_or_404(photo_id)
+    page = request.args.get('page', 1, type=int)
+    per_page = current_app.config['ALBUMY_USER_PER_PAGE']
+    pagination = Collect.query.with_parent(photo).order_by(Collect.timestamp.asc()).pagination(page, per_page)
+    collects = pagination.items
+    return render_template('main/collectors.html', collects=collects, photo=photo, pagination=pagination)
+
+

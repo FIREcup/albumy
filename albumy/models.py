@@ -45,6 +45,7 @@ class User(db.Model, UserMixin):
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         self.generate_avatar()
+        self.follow(self) # follow self
         self.set_role()
 
     def set_password(self, password):
@@ -93,6 +94,26 @@ class User(db.Model, UserMixin):
     def is_collecting(self, photo):
         return Collect.query.with_parent(self).filter_by(collected_id=photo.id).first() is not None
 
+    def follow(self, user):
+        if not self.is_following(user):
+            follow = Follow(follower=self, followed=user)
+            db.session.add(follow)
+            db.session.commit()
+
+    def unfollow(self, user):
+        follow = self.following.filter_by(followed_id=user.id).first()
+        if follow:
+            db.session.delete(follow)
+            db.session.commit()
+
+    def is_following(self, user):
+        if user.id is None: # when follow self, user.id will be None
+            return False
+        return self.following.filter_by(followed_id=user.id).first() is not None
+
+    def is_followed_by(self, user):
+        return self.followers.filter_by(follower_id=user.id).first() is not None
+
 
 class Permission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -130,8 +151,8 @@ class Role(db.Model):
         db.session.commit()
 
 
-tagging = db.Table('tagging', 
-                   db.Column('photo_id', db.Integer, db.ForeignKey('photo.id')), 
+tagging = db.Table('tagging',
+                   db.Column('photo_id', db.Integer, db.ForeignKey('photo.id')),
                    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')))
 
 
@@ -147,7 +168,7 @@ class Photo(db.Model):
 
     author = db.relationship('User', back_populates='photos')
     tags = db.relationship('Tag', secondary=tagging, back_populates='photos')
-    collectors = db.relationship('Collect', back_populates='collected', cascade='all') 
+    collectors = db.relationship('Collect', back_populates='collected', cascade='all')
 
 
 class Tag(db.Model):
