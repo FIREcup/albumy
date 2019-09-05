@@ -41,6 +41,8 @@ class User(db.Model, UserMixin):
 
     photos = db.relationship('Photo', back_populates='author', cascade='all, delete-orphan')
     collections = db.relationship('Collect', back_populates='collector', cascade='all')
+    
+    notifications = db.relationship('Notification', back_populates='receiver', cascade='all,delete-orphan')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -186,3 +188,11 @@ def delete_photos(**kwargs):
         if os.path.exists(path):
             os.remove(path)
 
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    reveiver = db.relationship('User', back_populates='notifications')
