@@ -1,6 +1,7 @@
 from flask import render_template, current_app, request, Blueprint
 
 from ..models import User, Photo
+from ..notification import push_follow_notification
 
 user_bp = Blueprint('user', __name__)
 
@@ -34,6 +35,7 @@ def follow(username):
 
     current_user.follow(user)
     flash('User followed.', 'success')
+    push_follow_notification(follower=current_user, receiver=user)
     return redirect_back()
 
 @user_bp.route('/unfollow/<username>', methods=['POST'])
