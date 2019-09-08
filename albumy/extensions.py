@@ -24,6 +24,14 @@ def load_user(user_id):
     user = User.query.get_or_404(user_id)
     return user
 
+
+login_manager.login_view = 'auth.login'
+login_manager.login_message = 'Please login.'
+login_manager.login_message_category = 'warning'
+login_manager.refresh_view = 'auth.re_authenticate'
+login_manager.needs_refresh_message = 'Please login.'
+login_manager.needs_refresh_message_category = 'warning'
+
 login_manager.login_view = 'auth.login'
 login_manager.login_message_category = 'warning'
 login_manager.refresh_view = 'auth.re_authenticate'

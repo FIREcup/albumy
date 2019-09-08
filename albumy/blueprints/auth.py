@@ -123,3 +123,16 @@ def resend_confirm_email():
     send_confirm_email(user=current_user, token=token)
     flash('New email send, check your inbox.', 'info')
     return redirect(url_for('main.index'))
+
+
+@auth_bp.route('/re-authenticate', methods=['GET', 'POST'])
+@login_required
+def re_authenticate():
+    if login_fresh():
+        return redirect(url_for('main.index'))
+
+    form = LoginForm()
+    if form.validate_on_submit() and current_user.validate_password(form.password.data):
+        confirm_login()
+        return redirect_back()
+    return render_template('auth/login.html', form=form)

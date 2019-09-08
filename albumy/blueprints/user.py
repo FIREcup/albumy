@@ -4,6 +4,8 @@ from ..models import User, Photo
 from ..notification import push_follow_notification
 
 user_bp = Blueprint('user', __name__)
+from ..forms.user import EditProfileForm, UploadAvatarForm, CropAvatarFrom, ChangeEmailForm, \
+    ChangePasswordForm, NotificationSettingForm, PrivacySettingForm, DeleteAccountForm
 
 @user_bp.route('/<username>')
 def index(username):
@@ -35,7 +37,8 @@ def follow(username):
 
     current_user.follow(user)
     flash('User followed.', 'success')
-    push_follow_notification(follower=current_user, receiver=user)
+    if user.receive_follow_notification:
+        push_follow_notification(follower=current_user, receiver=user)
     return redirect_back()
 
 @user_bp.route('/unfollow/<username>', methods=['POST'])
@@ -68,3 +71,99 @@ def show_following(username):
     pagination = user.following.paginate(page, per_page)
     follows = pagination.items
     return render_template('user/following.html', user=user, pagination=pagination, follows=follows)
+
+
+@user_bp.route('/settings/avatar')
+@login_required
+@confirm_required
+def change_avatar():
+    upload_form = UploadAvatarForm()
+    crop_form = CropAvatarForm()
+    return render_template('user/settings/change_avatar.html', upload_form=upload_form, crop_form=crop_form)
+
+
+@user_bp.route('/settings/avatar/upload', methods=['POST'])
+@login_required
+@confirm_required
+def upload_avatar():
+    form = UploadAvatarForm()
+    if fomr.validate_on_submit():
+        image = form.image.data
+        filename = avatars.save_avatar(image)
+        current_user.avatar_raw = filename
+        db.session.commit()
+        flash('Image uploaded, please crop.', 'success')
+    flash_errors(form)
+    return redirect(url_for('.change_avatar'))
+
+
+@user_bp.route('/settings/avatar/crop', methods=['POST'])
+@login_required
+@confirm_required
+def crop_avatar():
+    form = CropAvatarForm()
+    if form.validate_on_submit():
+        x = form.x.data
+        y = form.y.data
+        w = form.w.data
+        h = form.h.data
+        filenames = avatars.crop_avatar(current_user.avatar_raw, x, y, w, h)
+        current_user.avatar_s = filenames[0]
+        current_user.avatar_m = filenames[1]
+        current_user.avatar_l = filenames[2]
+        db.session.commit()
+        flash('Avatar updated.', 'success')
+    flash_errors(form)
+    return redirect(url_for('.change_avatar'))
+
+
+@user_bp.route('/settings/change-password', methods=['GET', 'POST'])
+@fresh_login_required
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit() and current_user.validate_password(form.old_password.data):
+        current_user.set_password(form.password.data)
+        db.session.commit()
+        flash('Password updated.', 'success')
+        return redirect(url_for('.index', username=current_user.username))
+    return render_template('user/settings/change_password.html', form=form)
+
+
+@user_bp.route('/settings/change-email', methods=['GET', 'POST'])
+@fresh_login_required
+def change_email_request():
+    form = ChangeEmailForm()
+    if form.validate_on_submit():
+        token = generate_token(user=current_user, operation=Operation.CHANGE_EMAIL, new_email=form.email.data.lower())
+        send_confirm_email(to=form.email.data, user=current_user, token=token)
+        flash('Confirm email send, check your inbox.', 'info')
+        return redirect(url_for('.index', username=current_user.username))
+    return render_template('user/settings/change_email.html', form=form)
+
+
+@user_bp.route('/change-email/<token>')
+@login_required
+def change_email(token):
+    if validate_toke(user=current_user, token=token, operation=Operation.CHANGE_EMAIL):
+        flash('Email updated.', 'success')
+        return redirect(url_for('.index', username=current_user.username))
+    else:
+        flash('Invalid or expired token.', 'warning')
+        return redirect(url_for('.change_email_request'))
+
+
+@user_bp.route('/settings/notificaiton', methods=['GET', 'POST'])
+@login_required
+def notification_setting():
+    form = NotificationSettingForm()
+    if form.validate_on_submit():
+        current_user.receive_collect_notificaiton = form.receive_collect_notificaiton.data
+        current_user.receive_comment_notificaiton = form.receive_comment_notificaiton.data
+        current_user.receive_follow_notificaiton = form.receive_follow_notificaiton.data
+        db.session.commit()
+        flash('Notification settings updated.', 'success')
+        return redirect(url_for('.index', username=current_user.username))
+    form.receive_collect_notification.data = current_user.receive_collect_notification
+    form.receive_comment_notification.data = current_user.receive_comment_notification
+    form.receive_follow_notification.data = current_user.receive_follow_notification
+    return render_template('user/settings/edit_notification.html', form=form)
