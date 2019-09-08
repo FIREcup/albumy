@@ -136,6 +136,22 @@ $(function () {
         });
     }
 
+    function update_notifications_count() {
+        var $el = $('#notification-badge')
+        $.ajax({
+            type: 'GET',
+            url: $el.data('href'),
+            success: function (data) {
+                if (data.count == 0) {
+                    $('#notification-badge').hide();
+                } else {
+                    $el.show();
+                    $el.text(data.count);
+                }
+            }
+        });
+    }
+
     $('.profile-popover').hover(show_profile_popover.bind(this), hide_profile_popover.bind(this));
     $(document).on('click', '.follow-btn', follow.bind(this));
     $(document).on('click', '.unfollow-btn', unfollow.bind(this));
@@ -151,4 +167,8 @@ $(function () {
     $('#confirm-delete').on('show.bs.modal', function(e) {
         $('.delete-form').attr('action', $(e.relatedTarget).data('href'));
     });
+
+    if (is_authenticated) {
+        setInterval(update_notifications_count, 30000)
+    }
 });

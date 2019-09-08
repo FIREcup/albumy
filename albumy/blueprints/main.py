@@ -265,3 +265,27 @@ def show_notifications():
     pagination = notifications.order_by(Notification.timestamp.desc()).paginate(page, per_page)
     notifications = pagination.items
     return render_template('main/notifications.html', pagination=pagination, notifications=notificaitons)
+
+
+@main_bp.route('/notification/read/<int:notification_id>', methods=['POST'])
+@login_required
+def read_notification(notification_id):
+    notification =Notification.query.get_or_404(notification_id)
+    if current_user != notification.receiver:
+        abort(403)
+
+    notification.is_read = True
+    db.session.commit()
+    flash('Notification archived.', 'success')
+    return redirect(url_for('.show_notifications'))
+
+
+@main_bp.route('/notifications/read/all', methods=['POST'])
+@login_required
+def read_all_notification():
+    for notification in current_user.notifications:
+        notification.is_read = True
+
+    db.session.commit()
+    flash('All notification archived.', 'success')
+    return redirect(url_for('.show_notifications'))
