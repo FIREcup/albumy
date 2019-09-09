@@ -82,3 +82,17 @@ class NotificationSettingForm(FlaskForm):
     receive_follow_notification = BooleanField('New follower')
     receive_collect_notification = BooleanField('New collector')
     submit = SubmitField()
+
+
+class PrivacySettingForm(FlaskForm):
+    public_collections = BooleanField('Public my collection')
+    submit = SubmitField()
+
+
+class DeleteAccountForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(1, 20)])
+    submit = SubmitField()
+
+    def validate_username(self, field):
+        if field.data != current_user.username:
+            raise ValidationError('Wrong username.')

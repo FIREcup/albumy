@@ -36,6 +36,8 @@ class User(db.Model, UserMixin):
     avatar_m = db.Column(db.String(64))
     avatar_l = db.Column(db.String(64))
     avatar_raw = db.Column(db.String(64))
+
+    public_collections = db.Column(db.Boolean,default=True)
     receive_comment_notification = db.Column(db.Boolean, default=True)
     receive_follow_notification = db.Column(db.Boolean, default=True)
     receive_collect_notification = db.Column(db.Boolean, default=True)

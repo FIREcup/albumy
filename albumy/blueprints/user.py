@@ -167,3 +167,28 @@ def notification_setting():
     form.receive_comment_notification.data = current_user.receive_comment_notification
     form.receive_follow_notification.data = current_user.receive_follow_notification
     return render_template('user/settings/edit_notification.html', form=form)
+
+
+@user_bp.route('/settings/privacy', methods=['GET', 'POST'])
+@login_required
+def privacy_setting():
+    form = PrivacySettingForm()
+    if form.validate_on_submit():
+        current_user.public_collection = form.public_collections.data
+        db.session.commit()
+        flash('Privacy settings updated.', 'success')
+        return redirect(url_for('.index', username=current_user.username))
+    form.public_collections.data = current_user.public_collections
+    return render_template('user/settings/edit_privacy.html', form=form)
+
+
+@user_bp.route('/settings/account/delete', methods=['GET', 'POST'])
+@fresh_login_required
+def delete_account():
+    form = DeleteAccountForm()
+    if form.validate_on_submit():
+        db.session.delete(current_user._get_current_object())
+        db.session.commit()
+        flash('You are free, goodbye!', 'success')
+        return redirect(url_for('main.index'))
+    return render_template('user/settings/delete_account.html', form=form)
