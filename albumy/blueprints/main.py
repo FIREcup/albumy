@@ -309,3 +309,23 @@ def read_all_notification():
     db.session.commit()
     flash('All notification archived.', 'success')
     return redirect(url_for('.show_notifications'))
+
+
+@main_bp.route('/search')
+def search():
+    q = request.args.get('q', '')
+    if q == '':
+        flash('Enter keyword about photo, user or tag.', 'warning')
+        return redirect_back()
+
+    category = request.args.get('category', 'photo')
+    page = request.args.get('page', 1, type=int)
+    per_page = current_app.config['ALBUMY_SEARCH_RESULT_PER_PAGE']
+    if category == 'user':
+        pagination = User.query.whooshee_search(q).paginate(page, per_page)
+    elif category == 'tag':
+        pagination = Tag.query.whooshee_search(q).paginate(page, per_page)
+    else:
+        pagination = Photo.query.whooshee_search(q).paginate(page, per_page)
+    results = pagination.items
+    return render_template('main/search.html', q=q, results=results, pagination=pagination, category=category)

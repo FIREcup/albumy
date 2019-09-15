@@ -16,6 +16,7 @@ pillow = "*"
 flask-avatars = "*"
 flask-dropzone = "*"
 flask-mail = "*"
+flask-whooshee = "*"
 
 [requires]
 python_version = "3.5"

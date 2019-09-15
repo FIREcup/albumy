@@ -4,7 +4,7 @@ from flask import Flask, render_template
 from flask_login import current_user
 from flask_wtf.csrf import CSRFError
 
-from extensions import bootstrap, db, login_manager, mail, dropzone, moment, whooshee, avatars, csrf
+from extensions import bootstrap, db, login_manager, mail, dropzone, moment, whooshee, avatars, csrf, whooshee
 from .models import User, Role
 from .settings import config
 
@@ -14,6 +14,12 @@ def create_app(config_name=None):
 
     app = Flask('albumy')
     app.config.from_object(config[config_name])
+    register_extensions(app)
+    register_blueprints(app)
+    register_commands(app)
+    register_errorhandlers(app)
+    register_shell_context(app)
+    register_template_context(app)
 
 
 def register_extensions(app):
@@ -25,6 +31,7 @@ def register_extensions(app):
     csrf.init_app(app)
     dropzone.init_app(app)
     avatars.init_app(app)
+    whooshee.init_app(app)
 
 def register_blueprints(app):
     app.register_blueprint(main_bp)
@@ -34,10 +41,18 @@ def register_blueprints(app):
 def register_shell_context(app):
     @app.shell_context_processor
     def make_shell_context():
-        return dict(db=db, User=User)
+        return dict(db=db, User=User, Photo=Photo, Tag=Tag,
+                    Follow=Follow, Collect=Collect, Comment=Comment,
+                    Notification=Notification)
 
 def register_template_context(app):
-    pass
+    @app.context_processor
+    def make_template_context():
+        if current_user.is_authenticated:
+            notification_count = Notification.query.with_parent(current_user).filter_by(is_read=False).count()
+        else:
+            notification_count = None
+        return dict(notification_count=notification_count)
 
 
 def register_errorhandler(app):

@@ -2,7 +2,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from .extensions import db
+from .extensions import db, whooshee
 from flask_avatars import Identicon
 
 
@@ -21,6 +21,7 @@ class Collect(db.Model):
     collected = db.relationship('Photo', back_populates='collectors', lazy='joined')
 
 
+@whooshee.register_model('name', 'username')
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, index=True)
@@ -47,7 +48,7 @@ class User(db.Model, UserMixin):
 
     photos = db.relationship('Photo', back_populates='author', cascade='all, delete-orphan')
     collections = db.relationship('Collect', back_populates='collector', cascade='all')
-    
+
     notifications = db.relationship('Notification', back_populates='receiver', cascade='all,delete-orphan')
 
     def __init__(self, **kwargs):
@@ -164,6 +165,7 @@ tagging = db.Table('tagging',
                    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')))
 
 
+@whooshee.register_model('description')
 class Photo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(500))
@@ -179,6 +181,7 @@ class Photo(db.Model):
     collectors = db.relationship('Collect', back_populates='collected', cascade='all')
 
 
+@whooshee.register_model('name')
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), uniq=True, index=True)
